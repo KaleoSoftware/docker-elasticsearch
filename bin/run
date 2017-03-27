@@ -59,5 +59,7 @@ fi
 # will run in.
 export ES_JAVA_OPTS="-Des.cgroups.hierarchy.override=/ $ES_JAVA_OPTS"
 
+chown -R elasticsearch:elasticsearch /data
+
 # run as non-root user
 exec /sbin/setuser elasticsearch /usr/share/elasticsearch/bin/elasticsearch ${es_opts}

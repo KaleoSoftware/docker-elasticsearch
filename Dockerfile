@@ -23,10 +23,7 @@ ENV \
     PATH=/usr/share/elasticsearch/bin:$PATH \
     JAVA_HOME=/usr/lib/jvm/java-1.8-openjdk
 
-# Volume for Elasticsearch data
-VOLUME ["/data"]
-
-EXPOSE 9200 9300
+RUN groupadd -r elasticsearch && useradd -r -g elasticsearch elasticsearch
 
 # Update ubuntu and install java
 RUN \
@@ -43,18 +40,21 @@ RUN \
 RUN \
   (curl -Lskj https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-$ES_VERSION.tar.gz | gunzip -c - | tar xf - ) \
   && mv elasticsearch-$ES_VERSION /usr/share/elasticsearch \
+  && chown -R elasticsearch:elasticsearch /usr/share/elasticsearch \
   && rm -rf $(find /usr/share/elasticsearch | egrep "(\.(exe|bat)$)")
 
 # Copy configuration
 COPY config /usr/share/elasticsearch/config
 
-RUN \
-  useradd --groups sudo elasticsearch \
-  && chown -R elasticsearch:elasticsearch /usr/share/elasticsearch /data \
-  && (echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers)
+# Volume for Elasticsearch data
+RUN mkdir /data && chown elasticsearch:elasticsearch /data
+VOLUME /data
+WORKDIR /data
 
 # phusion special way of running things
 RUN mkdir /etc/service/elasticsearch
 ADD bin/run /etc/service/elasticsearch/run
+
+EXPOSE 9200 9300
 
 CMD ["/sbin/my_init"]
